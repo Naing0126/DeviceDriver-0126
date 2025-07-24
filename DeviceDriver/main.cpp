@@ -8,29 +8,26 @@ class MockFlashMemoryDevice : public FlashMemoryDevice {
 public:
 	MOCK_METHOD(unsigned char, read, (long address), (override));
 	MOCK_METHOD(void, write, (long address, unsigned char data), (override));
-
-private:
-	unsigned char data = 0;
 };
 
-TEST(DeviceDriver, ReadFromHW) {
+class DeviceDriverFixture : public Test {
+protected:
 	MockFlashMemoryDevice mock;
+	DeviceDriver driver{ &mock };
+};
 
+TEST_F(DeviceDriverFixture, CheckReadFromHW5times) {
 	EXPECT_CALL(mock, read((long)0xB))
 		.Times(5);
 
-	DeviceDriver driver{ &mock };
 	int data = driver.read(0xB);
 }
-TEST(DeviceDriver, NotSameResponse) {
-	MockFlashMemoryDevice mock;
-
+TEST_F(DeviceDriverFixture, NotSameResponseForRead) {
 	EXPECT_CALL(mock, read((long)0xB))
 		.WillOnce(Return(1))
 		.WillRepeatedly(Return(0));
 
 	try {
-		DeviceDriver driver{ &mock };
 		int data = driver.read(0xB);
 		FAIL();
 	}
@@ -38,15 +35,13 @@ TEST(DeviceDriver, NotSameResponse) {
 		EXPECT_EQ(string{ e.what() }, string{ READ_FAIL_MESSAGE });
 	}
 }
-TEST(DeviceDriver, AllSameResponse) {
-	MockFlashMemoryDevice mock;
+TEST_F(DeviceDriverFixture, AllSameResponseForRead) {
 	int expect = 0;
 
 	EXPECT_CALL(mock, read((long)0xB))
 		.Times(5)
 		.WillRepeatedly(Return(expect));
 
-	DeviceDriver driver{ &mock };
 	EXPECT_THAT(driver.read(0xB), Eq(expect));
 }
 
