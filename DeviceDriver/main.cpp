@@ -1,6 +1,11 @@
 #include "gmock/gmock.h"
 #include "device_driver.h"
 
+using namespace testing;
+using namespace std;
+
+
+
 class MockFlashMemoryDevice : public FlashMemoryDevice {
 public:
 	MOCK_METHOD(unsigned char, read, (long address), (override));
@@ -18,6 +23,22 @@ TEST(DeviceDriver, ReadFromHW) {
 
 	DeviceDriver driver{ &mock };
 	int data = driver.read(0xB);
+}
+TEST(DeviceDriver, NotSameResponse) {
+	MockFlashMemoryDevice mock;
+
+	EXPECT_CALL(mock, read((long)0xB))
+		.WillOnce(Return(1))
+		.WillRepeatedly(Return(0));
+
+	try {
+		DeviceDriver driver{ &mock };
+		int data = driver.read(0xB);
+		FAIL();
+	}
+	catch (const exception& e) {
+		EXPECT_EQ(string{ e.what() }, string{ READ_FAIL_MESSAGE });
+	}
 }
 
 int main() {
