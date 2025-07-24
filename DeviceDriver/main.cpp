@@ -4,12 +4,13 @@
 class MockFlashMemoryDevice : public FlashMemoryDevice {
 public:
 	unsigned char read(long address) override {
-		return 0;
+		return data;
 	}
 	void write(long address, unsigned char data) override {
 
 	}
-
+private:
+	unsigned char data = 0;
 };
 
 TEST(DeviceDriver, ReadFromHW) {
