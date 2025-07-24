@@ -4,8 +4,6 @@
 using namespace testing;
 using namespace std;
 
-
-
 class MockFlashMemoryDevice : public FlashMemoryDevice {
 public:
 	MOCK_METHOD(unsigned char, read, (long address), (override));
@@ -39,6 +37,17 @@ TEST(DeviceDriver, NotSameResponse) {
 	catch (const exception& e) {
 		EXPECT_EQ(string{ e.what() }, string{ READ_FAIL_MESSAGE });
 	}
+}
+TEST(DeviceDriver, AllSameResponse) {
+	MockFlashMemoryDevice mock;
+	int expect = 0;
+
+	EXPECT_CALL(mock, read((long)0xB))
+		.Times(5)
+		.WillRepeatedly(Return(expect));
+
+	DeviceDriver driver{ &mock };
+	EXPECT_THAT(driver.read(0xB), Eq(expect));
 }
 
 int main() {
